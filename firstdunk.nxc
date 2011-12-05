@@ -1,0 +1,15 @@
+task main()
+{
+  SetSensor(S1,SENSOR_TOUCH);     //Configure l'entree 1 en touch sensor
+  SetSensor(S2,SENSOR_LIGHT);     //Configure l'entree 2 en light sensor
+  OnFwd(OUT_AC, 50);              //Le robot avance (sortie A et C, les moteurs, a la vitesse 50 (sur 100))
+  until(SENSOR_2 <= 55);          //Bloque jusqu'a que le light sensor capte en dessous de 55 (la balle est juste devant)
+  RotateMotor(OUT_B, -40,50);     //Fait tourner le bras (sortie B) de 50 degres à la vitesse -40 (prend la balle)
+  Coast(OUT_AC);                  //Arrete (calmement, pas de facon abrupte) les moteurs A et C
+  OnFwd(OUT_B,-10);               //Le bras tourne a la vitesse -10, bluff pour eviter que le bras ne retombe sous le poid de la balle, maintient le bras immobile
+  OnRev(OUT_AC, 50);              //Le robot recule a la vitesse 50
+  until(SENSOR_1==1);             //Des que le robot heurte qqch sur l'arriere
+  Coast(OUT_AC);                  //Arret calme des moteurs
+  RotateMotor(OUT_B, -80,160);    //DUUUUUUUUUUUUUUUUUUUUUUUUUUUUUNNNNNNNNNNNNNNNNNNNNNNNNNNNK
+  Off(OUT_B);                     //Arret du bras
+}
