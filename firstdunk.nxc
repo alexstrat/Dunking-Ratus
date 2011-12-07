@@ -1,15 +1,65 @@
+void init()  //initialise les capteurs et le generateur aleatoire
+{
+  SetSensor(S1,SENSOR_TOUCH); //Configure l'entree 1 en touch sensor
+  SetSensorLowspeed(S2);      //Configure l'entree 2 en light sensor
+  SetSensorLowspeed(S3);      //Configure l'entree 3 en compass sensor
+  SetSensorLowspeed(S4);      //Configure l'entree 3 en ultrasound sensor
+}
+
+safecall int getCompass()     //acces protege au compas
+{
+  return SensorHTCompass(S3);
+}
+
+safecall int getUltraSound()  //acces protege a l'ultrason
+{
+  return SensorUS(S4);
+}
+
+void randomTurn()  //quart de tour aléatoire
+{
+  int ref = getCompass();
+  int rol = Random(2);
+  if (rol == 0)
+  {
+    //while(getCompass() < ref+70)
+    // {
+    OnFwd(OUT_A, 35);
+    OnRev(OUT_C, 35);
+    Wait(2000);
+    // }
+    Coast(OUT_AC);
+  }
+  else
+  {
+    //while(getCompass() > ref-70)
+    // {
+      OnFwd(OUT_C, 35);
+      OnRev(OUT_A, 35);
+      Wait(2000);
+    // }
+    Coast(OUT_AC);
+  }
+}
+
+task randomWalk()  //random walk
+{
+  while (true){
+    if (getUltraSound() < 20)    //si il y a un obstacle
+    {
+      Coast(OUT_AC);          //arrete d'avancer
+      randomTurn();           //tourne
+    }
+    else
+    {
+      OnFwd(OUT_AC, 50);       //avance
+    }
+    Wait(500);                //tempo
+  }
+}
+
 task main()
 {
-  SetSensor(S1,SENSOR_TOUCH);     //Configure l'entree 1 en touch sensor
-  SetSensor(S2,SENSOR_LIGHT);     //Configure l'entree 2 en light sensor
-  OnFwd(OUT_AC, 50);              //Le robot avance (sortie A et C, les moteurs, a la vitesse 50 (sur 100))
-  until(SENSOR_2 <= 55);          //Bloque jusqu'a que le light sensor capte en dessous de 55 (la balle est juste devant)
-  RotateMotor(OUT_B, -40,50);     //Fait tourner le bras (sortie B) de 50 degres à la vitesse -40 (prend la balle)
-  Coast(OUT_AC);                  //Arrete (calmement, pas de facon abrupte) les moteurs A et C
-  OnFwd(OUT_B,-10);               //Le bras tourne a la vitesse -10, bluff pour eviter que le bras ne retombe sous le poid de la balle, maintient le bras immobile
-  OnRev(OUT_AC, 50);              //Le robot recule a la vitesse 50
-  until(SENSOR_1==1);             //Des que le robot heurte qqch sur l'arriere
-  Coast(OUT_AC);                  //Arret calme des moteurs
-  RotateMotor(OUT_B, -80,160);    //DUUUUUUUUUUUUUUUUUUUUUUUUUUUUUNNNNNNNNNNNNNNNNNNNNNNNNNNNK
-  Off(OUT_B);                     //Arret du bras
+  init();
+  start randomWalk;
 }
