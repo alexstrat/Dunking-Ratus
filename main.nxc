@@ -17,6 +17,7 @@ task findBall();
 task dunk();
 task randomWalk();
 task walkToBasket();
+task victoryLapDance();
 task debug(); //A FAIRE
 
 
@@ -97,14 +98,14 @@ Coast(OUT_AC);
 }
 
 
-void reposition(int dest)
+void reposition(int dest, int speed)
 {
 if(getCompass()>=dest)
 {
 while(getCompass()>=dest)
 {
-OnFwd(OUT_C, 20);
-OnRev(OUT_A,20);
+OnFwd(OUT_C, speed);
+OnRev(OUT_A, speed);
 Wait(100);
 }
 }
@@ -148,9 +149,9 @@ ExitTo(walkToBasket);
 task walkToBasket()
 {
 //TODO
-reposition(COMPASS_REF);
+reposition(COMPASS_REF,50);
 Wait(1000);
-reposition(COMPASS_REF);
+reposition(COMPASS_REF,20);
 OnRev(OUT_AC,40);
 int dunk=0;
 while(dunk==0)
@@ -163,6 +164,20 @@ Release(Dlock);
 Acquire(Clock);
 COLOR=NOCOLOR;
 Release(Clock);
+ExitTo(victoryLapDance);
+}
+
+task victoryLapDance()
+{
+OnFwd(OUT_AC, 50);
+Wait(2000);
+Coast(OUT_AC);
+RotateMotor(OUT_B, -50,90);
+OnFwd(OUT_B,-10);
+OnFwd(OUT_A, 35);
+OnRev(OUT_C,35);
+Wait(10000);
+Coast(OUT_ABC);
 ExitTo(randomWalk);
 }
 
@@ -180,7 +195,7 @@ Acquire(Clock);
 COLOR=col;
 Release(Clock);
 //stop randomWalk;
-RotateMotor(OUT_B, -50,100);
+RotateMotor(OUT_B, -50,90);
 OnFwd(OUT_B,-10);
 break;
 }
