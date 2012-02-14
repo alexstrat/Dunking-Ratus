@@ -15,18 +15,46 @@
 <li>
 <a href="#source-code">Source code</a></li>
 <li>
-<a href="#team">Team</a></ul></nav>
+<a href="#team-work">Team work</a></ul></nav>
 </header>
 <section id="title">
 <h1>Dunking-Ratus</h1>
+<section id="presentation">
+<h2>Presentation</h2>
+<p>Our robot is called <strong>Dunking-Ratus</strong> and his goal is to grab balls and <em>&quot;dunk&quot;</em> them in a basket. To do so, we use three sensors and two motors :</p>
+
+<ul>
+<li><em>ultrasonic sensor</em> to calculate distances</li>
+<li><em>color sensor</em> to identify balls</li>
+<li><em>compass</em> to orientate on the field</li>
+</ul>
+
+<p>This little robot was made during our last semester in Eurecom and will compete soon against other robots like him !</p>
 
 <p><img src="images/photo.JPG" alt="picture"/></p>
-<section id="presentation">
-<h2>Presentation</h2></section>
+</section>
 <section id="strategy">
-<h2>Strategy</h2></section>
+<h2>Strategy</h2>
+<p>Since a lot of the given sensors have great precision errors, we tried to keep our robot as simple as possible in its design, to not be stuck by to complicated algorithms paired with hazardous measures from our sensors.</p>
+
+<p>During the initialization phase of the game, the robot records a <em>north</em> and <em>south</em> position to be able to find its way home. After that, it immediatly start finding a ball.</p>
+
+<p>The way the robot move around on the field is by turning in right angles at rondom times or when facing a wall. This way, the robot travels in all the field space randomly. When it finds a ball, detecting it with its color sensor, the robot grabs it and raises it using its arm. Then it will find its way to the good basket using the <em>north</em> or <em>south</em> value depending on the color of the ball.</p>
+
+<p>After repositionning in front off the baskets by measuring its distance to the wall with the ultrasonic sensor, the robot finally <strong>dunks</strong> it the basket (hopefully)</p>
+</section>
 <section id="source-code">
 <h2>Source code</h2></section>
-<section id="team">
-<h2>Team</h2></body>
+<section id="team-work">
+<h2>Team work</h2>
+<p>Our team is composed of three young and foolish boys : <strong>Amaury Heackmann</strong>, <strong>Pierre Guilleminot</strong> and <strong>Alexandre Lachèze</strong>. </p>
+
+<p>Our work was divided in four steps : mechanical build, strategy elaboration, implementation, testing. These steps were iterated several times to improve each of one.</p>
+
+<p>Since our team is quite small, most of the time, we worked together on the same step.</p>
+
+<p>When separated and to improve our productivity in a team environement we used the version control system <a href="http://git-scm.com">Git</a> and the hosting website <a href="https://github.com">Github</a>.</p>
+
+<p>Finally, we also develloped this webpage as introduction material.</p>
+</body>
 </html>
