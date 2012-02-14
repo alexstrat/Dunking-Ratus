@@ -152,7 +152,6 @@ section h5 {
 /* Navigation */
 
 nav {
-	font-size:16px;
   position: fixed;
   margin-left: 60px;
   top: 0;
@@ -179,7 +178,7 @@ nav ul, nav li {
 }
 
 nav li {
-  font-size: 13px;
+	font-size: 16px;
   margin: 0px;
   list-style: none;
 }
