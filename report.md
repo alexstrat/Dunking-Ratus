@@ -1,7 +1,5 @@
 # Dunking-Ratus
 
-# Presentation
-
 Our robot is called **Dunking-Ratus** and his goal is to grab balls and *"dunk"* them in a basket. To do so, we use three sensors and two motors :
 
   - *ultrasonic sensor* to measure distances
