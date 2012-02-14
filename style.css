@@ -11,11 +11,14 @@ background:#fefefe;
 
 img {
   box-shadow: 1px 1px 12px #555;
+  width: 30em;
+  margin: auto;
+  display: block;
 }
 
 body > section {
 	left: 350px;
-	max-width: 40em;
+	width: 40em;
 	position: relative;
 }
 
