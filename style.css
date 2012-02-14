@@ -10,8 +10,9 @@ background:#fefefe;
 }
 
 body > section {
-	margin-left: 350px;
+	left: 350px;
 	max-width: 40em;
+	position: relative;
 }
 
 a{ color: #0645ad; text-decoration:none;}
