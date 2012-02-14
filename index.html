@@ -11,9 +11,9 @@
 <li>
 <a href="#strategy">Strategy</a></li>
 <li>
-<a href="#source-code">Source code</a></li>
+<a href="#team-work">Team work</a></li>
 <li>
-<a href="#team-work">Team work</a></ul></nav>
+<a href="#source-code">Source code</a></ul></nav>
 </header>
 <section id="title">
 <h1>Dunking-Ratus</h1>
@@ -38,10 +38,8 @@
 
 <p>The way the robot move around on the field is by turning in right angles at rondom times or when facing a wall. This way, the robot travels in all the field space randomly. When it finds a ball, detecting it with its color sensor, the robot grabs it and raises it using its arm. Then it will find its way to the good basket using the <em>north</em> or <em>south</em> value depending on the color of the ball.</p>
 
-<p>After repositionning in front off the baskets by measuring its distance to the wall with the ultrasonic sensor, the robot finally <strong>dunks</strong> it the basket (hopefully)</p>
+<p>After repositionning in front off the baskets by measuring its distance to the wall with the ultrasonic sensor, the robot finally <strong>dunks</strong> it the basket (hopefully).</p>
 </section>
-<section id="source-code">
-<h1>Source code</h1></section>
 <section id="team-work">
 <h1>Team work</h1>
 <p>Our team is composed of three young and foolish boys : <strong>Amaury Heackmann</strong>, <strong>Pierre Guilleminot</strong> and <strong>Alexandre Lachèze</strong>. </p>
@@ -53,5 +51,408 @@
 <p>When separated and to improve our productivity in a team environement we used the version control system <a href="http://git-scm.com">Git</a> and the hosting website <a href="https://github.com">Github</a>.</p>
 
 <p>Finally, we also develloped this webpage as introduction material.</p>
+</section>
+<section id="source-code">
+<h1>Source code</h1><div class="highlight"><pre><span class="cp">#define NOCOLOR 0</span>
+<span class="cp">#define RED 1</span>
+<span class="cp">#define BLUE 2</span>
+<span class="cp">#define NEAR 15</span>
+<span class="cp">#define RIGHT 0</span>
+<span class="cp">#define LEFT 1</span>
+<span class="cp">#define RANDOM 2</span>
+<span class="cp">#define SPEED 100</span>
+<span class="cp">//#define MIDDLE</span>
+<span class="cp">//#define E 0;</span>
+<span class="cp">//#define W 1;</span>
+<span class="cp">#define N 1;</span>
+<span class="cp">#define S 2;</span>
+
+<span class="kt">int</span> <span class="n">COLOR</span><span class="o">=</span><span class="n">NOCOLOR</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">NORTH</span><span class="o">=-</span><span class="mi">1</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">EAST</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">WEST</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">SOUTH</span><span class="o">=-</span><span class="mi">1</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">DIRECTION</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">READY2DUNK</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">DUNKED</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+<span class="n">mutex</span> <span class="n">Clock</span><span class="p">;</span>
+<span class="n">mutex</span> <span class="n">R2Dlock</span><span class="p">;</span>
+<span class="n">mutex</span> <span class="n">Dlock</span><span class="p">;</span>
+<span class="n">task</span> <span class="n">findBall</span><span class="p">();</span>
+<span class="n">task</span> <span class="n">dunk</span><span class="p">();</span>
+<span class="n">task</span> <span class="n">randomWalk</span><span class="p">();</span>
+<span class="n">task</span> <span class="n">walkToBasket</span><span class="p">();</span>
+<span class="n">task</span> <span class="n">victoryLapDance</span><span class="p">();</span>
+<span class="n">task</span> <span class="n">debug</span><span class="p">();</span> <span class="c1">//A FAIRE</span>
+
+
+<span class="kt">int</span> <span class="nf">init</span><span class="p">()</span>  <span class="c1">//initialise les capteurs et le generateur aleatoire</span>
+<span class="p">{</span>
+    <span class="n">SetSensor</span><span class="p">(</span><span class="n">S1</span><span class="p">,</span><span class="n">SENSOR_TOUCH</span><span class="p">);</span> <span class="c1">//Configure l&#39;entree 1 en touch sensor</span>
+    <span class="n">SetSensorLowspeed</span><span class="p">(</span><span class="n">S2</span><span class="p">);</span> <span class="c1">//Configure l&#39;entree 2 en light sensor</span>
+    <span class="n">SetSensorLowspeed</span><span class="p">(</span><span class="n">S3</span><span class="p">);</span> <span class="c1">//Configure l&#39;entree 3 en compass sensor</span>
+    <span class="n">SetSensorLowspeed</span><span class="p">(</span><span class="n">S4</span><span class="p">);</span> <span class="c1">//Configure l&#39;entree 3 en ultrasound sensor</span>
+<span class="p">}</span>
+
+<span class="n">safecall</span> <span class="kt">int</span> <span class="nf">getCompass</span><span class="p">()</span>  <span class="c1">//acces protege au compas</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="n">SensorHTCompass</span><span class="p">(</span><span class="n">S3</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+<span class="n">safecall</span> <span class="kt">int</span> <span class="nf">getTouch</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="n">Sensor</span><span class="p">(</span><span class="n">S1</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">safecall</span> <span class="kt">int</span> <span class="nf">getUltraSound</span><span class="p">()</span>  <span class="c1">//acces protege a l&#39;ultrason</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="n">SensorUS</span><span class="p">(</span><span class="n">S4</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+<span class="n">safecall</span> <span class="kt">int</span> <span class="nf">getColor</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">byte</span> <span class="n">red</span><span class="p">;</span>
+    <span class="n">byte</span> <span class="n">blue</span><span class="p">;</span>
+    <span class="n">byte</span> <span class="n">green</span><span class="p">;</span>
+    <span class="n">byte</span> <span class="n">colorNum</span><span class="p">;</span>
+    <span class="n">ReadSensorHTColor</span><span class="p">(</span><span class="n">S2</span><span class="p">,</span><span class="n">colorNum</span><span class="p">,</span><span class="n">red</span><span class="p">,</span> <span class="n">green</span><span class="p">,</span> <span class="n">blue</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">red</span><span class="o">&gt;</span><span class="mi">120</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="n">RED</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">blue</span><span class="o">&gt;</span><span class="mi">120</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="n">BLUE</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">else</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="n">NOCOLOR</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+
+<span class="kt">void</span> <span class="nf">turn</span><span class="p">(</span><span class="kt">int</span> <span class="n">dir</span><span class="p">)</span>  <span class="c1">//quart de tour (aléatoire, ou pas)</span>
+<span class="p">{</span>
+<span class="c1">//int ref=getCompass();</span>
+    <span class="kt">int</span> <span class="n">rightORleft</span> <span class="o">=</span> <span class="p">(</span><span class="n">dir</span><span class="o">==</span><span class="n">RANDOM</span><span class="p">)</span> <span class="o">?</span> <span class="n">Random</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">:</span> <span class="n">dir</span><span class="p">;</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">rightORleft</span><span class="o">==</span><span class="n">RIGHT</span><span class="p">)</span>
+    <span class="p">{</span>
+<span class="c1">//while(getCompass()&lt;ref+70)</span>
+        <span class="p">{</span>
+            <span class="n">OnFwd</span><span class="p">(</span><span class="n">OUT_A</span><span class="p">,</span> <span class="mi">35</span><span class="p">);</span>
+            <span class="n">OnRev</span><span class="p">(</span><span class="n">OUT_C</span><span class="p">,</span> <span class="mi">35</span><span class="p">);</span>
+            <span class="n">Wait</span><span class="p">(</span><span class="mi">2800</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="n">Coast</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+<span class="c1">//while(getCompass()&gt;ref-70)</span>
+        <span class="p">{</span>
+            <span class="n">OnFwd</span><span class="p">(</span><span class="n">OUT_C</span><span class="p">,</span> <span class="mi">35</span><span class="p">);</span>
+            <span class="n">OnRev</span><span class="p">(</span><span class="n">OUT_A</span><span class="p">,</span> <span class="mi">35</span><span class="p">);</span>
+            <span class="n">Wait</span><span class="p">(</span><span class="mi">2800</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="n">Coast</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+
+
+<span class="kt">void</span> <span class="nf">reposition</span><span class="p">(</span><span class="kt">int</span> <span class="n">dest</span><span class="p">,</span> <span class="kt">int</span> <span class="n">speed</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">getCompass</span><span class="p">()</span><span class="o">&gt;=</span><span class="n">dest</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">while</span><span class="p">(</span><span class="n">getCompass</span><span class="p">()</span><span class="o">&gt;=</span><span class="n">dest</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">OnFwd</span><span class="p">(</span><span class="n">OUT_C</span><span class="p">,</span> <span class="n">speed</span><span class="p">);</span>
+            <span class="n">OnRev</span><span class="p">(</span><span class="n">OUT_A</span><span class="p">,</span> <span class="n">speed</span><span class="p">);</span>
+            <span class="n">Wait</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="k">while</span><span class="p">(</span><span class="n">getCompass</span><span class="p">()</span><span class="o">&lt;=</span><span class="n">dest</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">OnFwd</span><span class="p">(</span><span class="n">OUT_A</span><span class="p">,</span> <span class="n">speed</span><span class="p">);</span>
+            <span class="n">OnRev</span><span class="p">(</span><span class="n">OUT_C</span><span class="p">,</span><span class="n">speed</span><span class="p">);</span>
+            <span class="n">Wait</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">Coast</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">initCompass</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">Wait</span><span class="p">(</span><span class="mi">10000</span><span class="p">);</span>
+    <span class="n">SOUTH</span><span class="o">=</span><span class="n">getCompass</span><span class="p">();</span>
+    <span class="n">turn</span><span class="p">(</span><span class="n">LEFT</span><span class="p">);</span>
+    <span class="n">turn</span><span class="p">(</span><span class="n">LEFT</span><span class="p">);</span>
+    <span class="n">Wait</span><span class="p">(</span><span class="mi">10000</span><span class="p">);</span>
+    <span class="n">NORTH</span><span class="o">=</span><span class="n">getCompass</span><span class="p">();</span>
+<span class="p">}</span>
+
+
+<span class="n">task</span> <span class="nf">randomWalk</span><span class="p">()</span>  <span class="c1">//random walk</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">color</span><span class="o">=</span><span class="n">NOCOLOR</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">timer</span><span class="o">=</span><span class="n">Random</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span><span class="o">+</span><span class="mi">8</span><span class="p">;</span>
+    <span class="n">Acquire</span><span class="p">(</span><span class="n">Dlock</span><span class="p">);</span>
+    <span class="n">DUNKED</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+    <span class="n">Release</span><span class="p">(</span><span class="n">Dlock</span><span class="p">);</span>
+    <span class="n">OnFwd</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">,</span><span class="n">SPEED</span><span class="p">);</span>
+
+<span class="cp">#ifdef MIDDLE</span>
+    <span class="n">Coast</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">);</span>
+    <span class="n">Wait</span><span class="p">(</span><span class="mi">4500</span><span class="p">);</span>
+    <span class="n">reposition</span><span class="p">(</span><span class="n">WEST</span><span class="p">,</span><span class="mi">30</span><span class="p">);</span>
+    <span class="n">reposition</span><span class="p">(</span><span class="n">WEST</span><span class="p">,</span><span class="mi">20</span><span class="p">);</span>
+    <span class="n">DIRECTION</span><span class="o">=</span><span class="n">W</span><span class="p">;</span>
+    <span class="n">OnFwd</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">,</span><span class="n">SPEED</span><span class="p">);</span>
+<span class="cp">#endif</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="n">color</span><span class="o">==</span><span class="n">NOCOLOR</span><span class="p">)</span>
+<span class="c1">//while(true)</span>
+    <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">getUltraSound</span><span class="p">()</span><span class="o">&lt;</span><span class="n">NEAR</span><span class="o">||</span><span class="n">timer</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>  <span class="c1">//si il y a un obstacle</span>
+        <span class="p">{</span>
+            <span class="n">Coast</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">);</span>          <span class="c1">//arrete d&#39;avancer</span>
+            <span class="n">turn</span><span class="p">(</span><span class="n">RANDOM</span><span class="p">);</span>
+            <span class="n">timer</span><span class="o">=</span><span class="n">Random</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span><span class="o">+</span><span class="mi">8</span><span class="p">;</span>
+            <span class="n">OnFwd</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">,</span><span class="n">SPEED</span><span class="p">);</span>       <span class="c1">//redemarre</span>
+        <span class="p">}</span>
+        <span class="n">timer</span><span class="o">=</span><span class="n">timer</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+        <span class="n">Wait</span><span class="p">(</span><span class="mi">250</span><span class="p">);</span>             <span class="c1">//tempo</span>
+        <span class="n">Acquire</span><span class="p">(</span><span class="n">Clock</span><span class="p">);</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">COLOR</span><span class="p">;</span>
+        <span class="n">Release</span><span class="p">(</span><span class="n">Clock</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">ExitTo</span><span class="p">(</span><span class="n">walkToBasket</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">task</span> <span class="nf">walkToBasket</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="c1">//TODO</span>
+    <span class="kt">int</span> <span class="n">dir</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">col</span><span class="p">;</span>
+    <span class="n">Acquire</span><span class="p">(</span><span class="n">Clock</span><span class="p">);</span>
+    <span class="n">col</span><span class="o">=</span><span class="n">COLOR</span><span class="p">;</span>
+    <span class="n">Release</span><span class="p">(</span><span class="n">Clock</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">col</span><span class="o">==</span><span class="n">RED</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">dir</span><span class="o">=</span><span class="n">NORTH</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="n">dir</span><span class="o">=</span><span class="n">SOUTH</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">reposition</span><span class="p">(</span><span class="n">dir</span><span class="p">,</span><span class="mi">50</span><span class="p">);</span>
+    <span class="n">Wait</span><span class="p">(</span><span class="mi">1000</span><span class="p">);</span>
+    <span class="n">reposition</span><span class="p">(</span><span class="n">dir</span><span class="p">,</span><span class="mi">30</span><span class="p">);</span>
+    <span class="n">OnRev</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">,</span><span class="n">SPEED</span><span class="p">);</span>
+    <span class="k">while</span><span class="p">(</span><span class="n">getTouch</span><span class="p">()</span><span class="o">!=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">Wait</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">Coast</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">);</span>
+    <span class="n">OnFwd</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">,</span><span class="mi">40</span><span class="p">);</span>
+    <span class="n">Wait</span><span class="p">(</span><span class="mi">1000</span><span class="p">);</span>
+    <span class="n">Coast</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">);</span>
+    <span class="n">turn</span><span class="p">(</span><span class="n">LEFT</span><span class="p">);</span>
+    <span class="n">Wait</span><span class="p">(</span><span class="mi">2000</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">getUltraSound</span><span class="p">()</span><span class="o">&gt;</span><span class="mi">45</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">OnFwd</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">,</span><span class="mi">40</span><span class="p">);</span>
+        <span class="k">while</span><span class="p">(</span><span class="n">getUltraSound</span><span class="p">()</span><span class="o">&gt;</span><span class="mi">47</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">Wait</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="n">OnRev</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">,</span><span class="mi">40</span><span class="p">);</span>
+        <span class="k">while</span><span class="p">(</span><span class="n">getUltraSound</span><span class="p">()</span><span class="o">&lt;</span><span class="mi">47</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">Wait</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">Coast</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">);</span>
+    <span class="n">turn</span><span class="p">(</span><span class="n">RIGHT</span><span class="p">);</span>
+    <span class="n">turn</span><span class="p">(</span><span class="n">RIGHT</span><span class="p">);</span>
+    <span class="n">Wait</span><span class="p">(</span><span class="mi">2000</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">getUltraSound</span><span class="p">()</span><span class="o">&gt;</span><span class="mi">45</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">OnFwd</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">,</span><span class="mi">40</span><span class="p">);</span>
+        <span class="k">while</span><span class="p">(</span><span class="n">getUltraSound</span><span class="p">()</span><span class="o">&gt;</span><span class="mi">47</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">Wait</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="n">OnRev</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">,</span><span class="mi">40</span><span class="p">);</span>
+        <span class="k">while</span><span class="p">(</span><span class="n">getUltraSound</span><span class="p">()</span><span class="o">&lt;</span><span class="mi">47</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">Wait</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">Coast</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">);</span>
+    <span class="n">turn</span><span class="p">(</span><span class="n">LEFT</span><span class="p">);</span>
+<span class="c1">//reposition(dir,20);</span>
+<span class="c1">//Wait(1000);</span>
+<span class="c1">//reposition(dir,20);</span>
+<span class="c1">//Wait(1000);</span>
+    <span class="n">OnRev</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">,</span><span class="n">SPEED</span><span class="p">);</span>
+    <span class="k">while</span><span class="p">(</span><span class="n">getTouch</span><span class="p">()</span><span class="o">!=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">Wait</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">Coast</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">);</span>
+    <span class="n">OnFwd</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">,</span><span class="mi">40</span><span class="p">);</span>
+    <span class="n">Wait</span><span class="p">(</span><span class="mi">1000</span><span class="p">);</span>
+    <span class="n">Coast</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">);</span>
+
+    <span class="n">Acquire</span><span class="p">(</span><span class="n">R2Dlock</span><span class="p">);</span>
+    <span class="n">READY2DUNK</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+    <span class="n">Release</span><span class="p">(</span><span class="n">R2Dlock</span><span class="p">);</span>
+
+
+
+<span class="cm">/*reposition(NORTH,20);</span>
+<span class="cm">Wait(1000);</span>
+<span class="cm">reposition(NORTH,20);</span>
+<span class="cm">OnRev(OUT_AC,SPEED);*/</span>
+
+    <span class="kt">int</span> <span class="n">dunk</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+<span class="k">while</span><span class="p">(</span><span class="n">dunk</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">Wait</span><span class="p">(</span><span class="mi">500</span><span class="p">);</span>
+    <span class="n">Acquire</span><span class="p">(</span><span class="n">Dlock</span><span class="p">);</span>
+    <span class="n">dunk</span><span class="o">=</span><span class="n">DUNKED</span><span class="p">;</span>
+    <span class="n">Release</span><span class="p">(</span><span class="n">Dlock</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="n">Acquire</span><span class="p">(</span><span class="n">Clock</span><span class="p">);</span>
+<span class="n">COLOR</span><span class="o">=</span><span class="n">NOCOLOR</span><span class="p">;</span>
+<span class="n">Release</span><span class="p">(</span><span class="n">Clock</span><span class="p">);</span>
+<span class="c1">//ExitTo(victoryLapDance);</span>
+<span class="n">ExitTo</span><span class="p">(</span><span class="n">randomWalk</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">task</span> <span class="nf">victoryLapDance</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">OnFwd</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">,</span> <span class="n">SPEED</span><span class="p">);</span>
+    <span class="n">Wait</span><span class="p">(</span><span class="mi">5000</span><span class="p">);</span>
+    <span class="n">Coast</span><span class="p">(</span><span class="n">OUT_AC</span><span class="p">);</span>
+    <span class="n">RotateMotor</span><span class="p">(</span><span class="n">OUT_B</span><span class="p">,</span> <span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="mi">90</span><span class="p">);</span>
+    <span class="n">OnFwd</span><span class="p">(</span><span class="n">OUT_B</span><span class="p">,</span><span class="o">-</span><span class="mi">10</span><span class="p">);</span>
+    <span class="n">OnFwd</span><span class="p">(</span><span class="n">OUT_A</span><span class="p">,</span> <span class="mi">75</span><span class="p">);</span>
+    <span class="n">OnRev</span><span class="p">(</span><span class="n">OUT_C</span><span class="p">,</span><span class="mi">75</span><span class="p">);</span>
+    <span class="n">Wait</span><span class="p">(</span><span class="mi">10000</span><span class="p">);</span>
+    <span class="n">Coast</span><span class="p">(</span><span class="n">OUT_ABC</span><span class="p">);</span>
+    <span class="n">ExitTo</span><span class="p">(</span><span class="n">randomWalk</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+<span class="n">task</span> <span class="nf">findBall</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">col</span><span class="p">;</span>
+<span class="c1">//start randomWalk;</span>
+    <span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">col</span><span class="o">=</span><span class="n">getColor</span><span class="p">();</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">col</span><span class="o">!=</span><span class="n">NOCOLOR</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">Acquire</span><span class="p">(</span><span class="n">Clock</span><span class="p">);</span>
+            <span class="n">COLOR</span><span class="o">=</span><span class="n">col</span><span class="p">;</span>
+            <span class="n">Release</span><span class="p">(</span><span class="n">Clock</span><span class="p">);</span>
+<span class="c1">//stop randomWalk;</span>
+            <span class="n">RotateMotor</span><span class="p">(</span><span class="n">OUT_B</span><span class="p">,</span> <span class="o">-</span><span class="mi">50</span><span class="p">,</span><span class="mi">90</span><span class="p">);</span>
+            <span class="n">OnFwd</span><span class="p">(</span><span class="n">OUT_B</span><span class="p">,</span><span class="o">-</span><span class="mi">10</span><span class="p">);</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+<span class="c1">//Wait(100);</span>
+    <span class="p">}</span>
+    <span class="n">ExitTo</span><span class="p">(</span><span class="n">dunk</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">task</span> <span class="nf">dunk</span><span class="p">(){</span>
+<span class="c1">//TODO</span>
+    <span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">Acquire</span><span class="p">(</span><span class="n">R2Dlock</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">READY2DUNK</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">Release</span><span class="p">(</span><span class="n">R2Dlock</span><span class="p">);</span>
+        <span class="n">Wait</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">Release</span><span class="p">(</span><span class="n">R2Dlock</span><span class="p">);</span>
+<span class="c1">//Coast(OUT_AC); //A deplacer dans R2D ac getTouch (walkToBasket)</span>
+    <span class="n">RotateMotor</span><span class="p">(</span><span class="n">OUT_B</span><span class="p">,</span> <span class="o">-</span><span class="mi">80</span><span class="p">,</span><span class="mi">100</span><span class="p">);</span>
+    <span class="n">Wait</span><span class="p">(</span><span class="mi">2000</span><span class="p">);</span>
+    <span class="n">RotateMotor</span><span class="p">(</span><span class="n">OUT_B</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span><span class="mi">180</span><span class="p">);</span>
+    <span class="n">Off</span><span class="p">(</span><span class="n">OUT_B</span><span class="p">);</span>
+
+    <span class="n">Acquire</span><span class="p">(</span><span class="n">Dlock</span><span class="p">);</span>
+    <span class="n">DUNKED</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+    <span class="n">Release</span><span class="p">(</span><span class="n">Dlock</span><span class="p">);</span>
+
+    <span class="n">Acquire</span><span class="p">(</span><span class="n">R2Dlock</span><span class="p">);</span>
+    <span class="n">READY2DUNK</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+    <span class="n">Release</span><span class="p">(</span><span class="n">R2Dlock</span><span class="p">);</span>
+
+    <span class="n">ExitTo</span><span class="p">(</span><span class="n">findBall</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+<span class="n">task</span> <span class="n">debug</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">TextOut</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">LCD_LINE3</span><span class="p">,</span> <span class="s">&quot;Compas&quot;</span><span class="p">);</span>
+        <span class="n">TextOut</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">LCD_LINE4</span><span class="p">,</span> <span class="s">&quot;     &quot;</span><span class="p">);</span>
+        <span class="n">NumOut</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">LCD_LINE4</span><span class="p">,</span> <span class="n">getCompass</span><span class="p">());</span>
+        <span class="cm">/*TextOut(0, LCD_LINE3, &quot;UltraSound&quot;);</span>
+<span class="cm">        TextOut(0,LCD_LINE4, &quot;     &quot;);</span>
+<span class="cm">        NumOut(0,LCD_LINE4, getUltraSound());</span>
+<span class="cm">        TextOut(0, LCD_LINE5, &quot;Color&quot;);</span>
+<span class="cm">        TextOut(0,LCD_LINE6, &quot;     &quot;);</span>
+<span class="cm">        NumOut(0,LCD_LINE6, getColor());*/</span>
+            <span class="n">TextOut</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">LCD_LINE1</span><span class="p">,</span> <span class="s">&quot;NORTH&quot;</span><span class="p">);</span>
+        <span class="n">TextOut</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">LCD_LINE2</span><span class="p">,</span> <span class="s">&quot;     &quot;</span><span class="p">);</span>
+        <span class="n">NumOut</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">LCD_LINE2</span><span class="p">,</span> <span class="n">NORTH</span><span class="p">);</span>
+        <span class="cm">/*TextOut(0, LCD_LINE3, &quot;WEST&quot;);</span>
+<span class="cm">        TextOut(0,LCD_LINE4, &quot;     &quot;);</span>
+<span class="cm">        NumOut(0,LCD_LINE4,WEST);*/</span>
+            <span class="n">TextOut</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">LCD_LINE5</span><span class="p">,</span> <span class="s">&quot;SOUTH&quot;</span><span class="p">);</span>
+        <span class="n">TextOut</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">LCD_LINE6</span><span class="p">,</span> <span class="s">&quot;     &quot;</span><span class="p">);</span>
+        <span class="n">NumOut</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">LCD_LINE6</span><span class="p">,</span> <span class="n">SOUTH</span><span class="p">);</span>
+        <span class="cm">/*TextOut(0, LCD_LINE7, &quot;EAST&quot;);</span>
+<span class="cm">        TextOut(0,LCD_LINE8, &quot;     &quot;);</span>
+<span class="cm">        NumOut(0,LCD_LINE8, EAST);*/</span>
+
+            <span class="n">Wait</span><span class="p">(</span><span class="mi">500</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+
+<span class="n">task</span> <span class="n">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">init</span><span class="p">();</span>
+    <span class="n">StartTask</span><span class="p">(</span><span class="n">debug</span><span class="p">);</span>
+    <span class="n">initCompass</span><span class="p">();</span>
+    <span class="n">StartTask</span><span class="p">(</span><span class="n">findBall</span><span class="p">);</span>
+    <span class="n">StartTask</span><span class="p">(</span><span class="n">randomWalk</span><span class="p">);</span>
+
+<span class="p">}</span>
+</pre>
+</div>
 </body>
 </html>
