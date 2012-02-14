@@ -18,7 +18,7 @@ class SyntaxRenderer < Redcarpet::Render::HTML
     <html lang="en-US">
     <head>
     <meta charset="UTF-8">
-    <title>Semester project report</title>
+    <title>Dunking Ratus</title>
     <link rel="stylesheet" href="#{@style}">
     </head>
     <body>
