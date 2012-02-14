@@ -1,10 +1,10 @@
 # Dunking-Ratus
 
-## Presentation
+# Presentation
 
 Our robot is called **Dunking-Ratus** and his goal is to grab balls and *"dunk"* them in a basket. To do so, we use three sensors and two motors :
 
-  - *ultrasonic sensor* to calculate distances
+  - *ultrasonic sensor* to measure distances
   - *color sensor* to identify balls
   - *compass* to orientate on the field
 
@@ -12,7 +12,7 @@ This little robot was made during our last semester in Eurecom and will compete 
 
 ![picture](images/photo.JPG)
 
-## Strategy
+# Strategy
 
 Since a lot of the given sensors have great precision errors, we tried to keep our robot as simple as possible in its design, to not be stuck by to complicated algorithms paired with hazardous measures from our sensors.
 
@@ -22,9 +22,9 @@ The way the robot move around on the field is by turning in right angles at rond
 
 After repositionning in front off the baskets by measuring its distance to the wall with the ultrasonic sensor, the robot finally **dunks** it the basket (hopefully)
 
-## Source code
+# Source code
 
-## Team work
+# Team work
 
 Our team is composed of three young and foolish boys : **Amaury Heackmann**, **Pierre Guilleminot** and **Alexandre Lachèze**. 
 

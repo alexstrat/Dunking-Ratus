@@ -7,7 +7,7 @@
 </head>
 <body>
 <header>
-<nav id="toc"><ul><ul>
+<nav id="toc"><ul></li>
 <li>
 <a href="#presentation">Presentation</a></li>
 <li>
@@ -19,12 +19,13 @@
 </header>
 <section id="title">
 <h1>Dunking-Ratus</h1>
+</section>
 <section id="presentation">
-<h2>Presentation</h2>
+<h1>Presentation</h1>
 <p>Our robot is called <strong>Dunking-Ratus</strong> and his goal is to grab balls and <em>&quot;dunk&quot;</em> them in a basket. To do so, we use three sensors and two motors :</p>
 
 <ul>
-<li><em>ultrasonic sensor</em> to calculate distances</li>
+<li><em>ultrasonic sensor</em> to measure distances</li>
 <li><em>color sensor</em> to identify balls</li>
 <li><em>compass</em> to orientate on the field</li>
 </ul>
@@ -34,7 +35,7 @@
 <p><img src="images/photo.JPG" alt="picture"/></p>
 </section>
 <section id="strategy">
-<h2>Strategy</h2>
+<h1>Strategy</h1>
 <p>Since a lot of the given sensors have great precision errors, we tried to keep our robot as simple as possible in its design, to not be stuck by to complicated algorithms paired with hazardous measures from our sensors.</p>
 
 <p>During the initialization phase of the game, the robot records a <em>north</em> and <em>south</em> position to be able to find its way home. After that, it immediatly start finding a ball.</p>
@@ -44,9 +45,9 @@
 <p>After repositionning in front off the baskets by measuring its distance to the wall with the ultrasonic sensor, the robot finally <strong>dunks</strong> it the basket (hopefully)</p>
 </section>
 <section id="source-code">
-<h2>Source code</h2></section>
+<h1>Source code</h1></section>
 <section id="team-work">
-<h2>Team work</h2>
+<h1>Team work</h1>
 <p>Our team is composed of three young and foolish boys : <strong>Amaury Heackmann</strong>, <strong>Pierre Guilleminot</strong> and <strong>Alexandre Lachèze</strong>. </p>
 
 <p>Our work was divided in four steps : mechanical build, strategy elaboration, implementation, testing. These steps were iterated several times to improve each of one.</p>
