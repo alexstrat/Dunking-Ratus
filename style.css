@@ -9,6 +9,10 @@ padding:1em;
 background:#fefefe;
 }
 
+img {
+  box-shadow: 1px 1px 12px #555;
+}
+
 body > section {
 	left: 350px;
 	max-width: 40em;
