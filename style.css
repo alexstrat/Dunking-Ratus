@@ -23,6 +23,7 @@ img {
 body > section {
 	left: 350px;
 	width: 40em;
+	display: block;
 	position: relative;
 }
 
