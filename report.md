@@ -24,4 +24,18 @@ After repositionning in front off the baskets by measuring its distance to the w
 
 ## Source code
 
-## Team
+## Team work
+
+Our team is composed of three young and foolish boys : **Amaury Heackmann**, **Pierre Guilleminot** and **Alexandre Lachèze**. 
+
+Our work was divided in four steps : mechanical build, strategy elaboration, implementation, testing. These steps were iterated several times to improve each of one.
+
+Since our team is quite small, most of the time, we worked together on the same step.
+
+When separated and to improve our productivity in a team environement we used the version control system [Git] and the hosting website [Github].
+
+Finally, we also develloped this webpage as introduction material.
+
+
+[Git]: http://git-scm.com
+[Github]: https://github.com
