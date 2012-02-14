@@ -11,6 +11,10 @@ background:#fefefe;
 
 img {
   box-shadow: 1px 1px 12px #555;
+  -moz-box-shadow: 1px 1px 12px #555;
+  -webkit-box-shadow: 1px 1px 12px #555;
+  -o-box-shadow: 1px 1px 12px #555;
+
   width: 30em;
   margin-left: 4em;
   display: block;
